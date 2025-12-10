@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Mathematics Department - King & Queen Election</title>
+    
+    <!-- Styles & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ['"Playfair Display"', 'serif'],
+              sans: ['"Inter"', 'sans-serif'],
+            },
+            colors: {
+              royal: { 900: '#1a1b4b', 800: '#2e2f75', 100: '#e0e7ff' },
+              gold: { 500: '#d4af37', 400: '#f4c430' }
+            }
+          }
+        }
+      }
+    </script>
+
+<link rel="stylesheet" href="/index.css">
+<script type="importmap">
+{
+  "imports": {
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.1",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/electionsystem2/assets/index-DCLN_VSH.js"></script>
+  <link rel="stylesheet" crossorigin href="/electionsystem2/assets/index-MrP5r3eW.css">
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased selection:bg-gold-400 selection:text-royal-900">
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Navigation (Hidden on Landing) -->
+    <nav id="main-nav" class="bg-royal-900 text-white p-4 sticky top-0 z-30 shadow-lg hidden safe-area-top">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <a href="#landing" class="text-lg md:text-xl font-serif font-bold flex items-center gap-2 truncate">
+               <span class="text-gold-400 shrink-0">👑</span> 
+               <span class="truncate">Math Dept. Election</span>
+            </a>
+            <div class="flex items-center gap-4 shrink-0">
+                 <button onclick="app.navigate('landing')" class="flex items-center gap-2 text-sm bg-royal-800 hover:bg-royal-700 px-3 py-1.5 rounded-full transition-colors border border-royal-700 active:scale-95">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Exit</span>
+                 </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- App Container -->
+    <main id="app-root" class="min-h-screen">
+        
+        <!-- SECTION: Landing Page -->
+        <section id="landing-page" class="min-h-screen bg-royal-900 flex flex-col items-center justify-center p-6 text-center">
+            <div class="mb-6 md:mb-8 animate-bounce"><span class="text-5xl md:text-6xl">👑</span></div>
+            <h1 class="text-4xl md:text-6xl font-serif font-bold text-white mb-4 leading-tight">Mathematics Department</h1>
+            <p class="text-royal-100 text-lg md:text-xl max-w-lg mb-8 md:mb-12 leading-relaxed">Welcome to the annual King & Queen election. Please select your portal.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full max-w-2xl">
+                <button onclick="app.navigate('vote')" class="group bg-white p-6 md:p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 active:scale-95 flex flex-col items-center cursor-pointer touch-manipulation">
+                   <div class="w-14 h-14 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                     <i data-lucide="user" class="w-7 h-7 md:w-8 md:h-8"></i>
+                   </div>
+                   <h2 class="text-xl md:text-2xl font-bold text-gray-900">Voter Portal</h2>
+                   <p class="text-gray-500 mt-2 text-sm md:text-base">View candidates and cast your vote.</p>
+                </button>
+                <button onclick="app.checkAdminSession()" class="group bg-royal-800 p-6 md:p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 active:scale-95 flex flex-col items-center border border-royal-700 cursor-pointer touch-manipulation">
+                   <div class="w-14 h-14 md:w-16 md:h-16 bg-gold-400/20 rounded-full flex items-center justify-center text-gold-400 mb-4 group-hover:bg-gold-400 group-hover:text-royal-900 transition-colors">
+                     <i data-lucide="shield" class="w-7 h-7 md:w-8 md:h-8"></i>
+                   </div>
+                   <h2 class="text-xl md:text-2xl font-bold text-white">Admin Control</h2>
+                   <p class="text-royal-200 mt-2 text-sm md:text-base">For administrators only.</p>
+                </button>
+            </div>
+        </section>
+
+        <!-- SECTION: User Voting -->
+        <section id="voting-page" class="hidden max-w-6xl mx-auto p-4 md:p-8 space-y-8 md:space-y-12 pb-24">
+            <div class="text-center space-y-4 relative pt-4 md:pt-0">
+                <h1 id="user-page-title" class="text-3xl md:text-5xl font-serif text-royal-900 font-bold leading-tight">Cast Your Vote</h1>
+                <p id="user-page-subtitle" class="text-gray-600 text-sm md:text-base">Select your chosen King and Queen.</p>
+                <div id="voting-timer-container" class="inline-flex items-center gap-2 bg-royal-100 text-royal-900 px-4 py-2 md:px-6 md:py-3 rounded-full font-mono text-lg md:text-xl font-bold shadow-inner hidden">
+                    <i data-lucide="clock" class="w-5 h-5 md:w-6 md:h-6"></i>
+                    <span id="voting-timer-display">00:00</span>
+                </div>
+                <div class="absolute top-0 right-0 hidden md:block">
+                     <button onclick="app.toggleModal('nomination-modal', true)" class="flex items-center gap-2 bg-white text-royal-900 px-4 py-2 rounded-lg shadow border border-gray-200 hover:bg-royal-50 transition-colors text-sm font-medium">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i> Nominate Yourself
+                     </button>
+                </div>
+            </div>
+
+            <!-- WINNERS PODIUM (Initially Hidden) -->
+            <div id="winners-section" class="hidden animate-fadeIn space-y-8 py-8 bg-gradient-to-b from-yellow-50/50 to-transparent rounded-3xl border border-gold-400/20">
+                <div class="text-center">
+                    <div class="inline-block p-3 rounded-full bg-gold-400/20 mb-4 animate-bounce">
+                        <i data-lucide="trophy" class="w-8 h-8 text-gold-500"></i>
+                    </div>
+                    <h2 class="text-3xl md:text-4xl font-serif font-bold text-royal-900">Election Winners</h2>
+                    <p class="text-gray-600 mt-2">Congratulations to our new King & Queen!</p>
+                </div>
+                <div id="winners-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto px-4">
+                    <!-- Winners injected by JS -->
+                </div>
+            </div>
+
+            <!-- Mobile Nominate Button -->
+            <div class="md:hidden flex justify-center sticky top-[72px] z-20">
+                 <button onclick="app.toggleModal('nomination-modal', true)" class="flex items-center gap-2 bg-white/90 backdrop-blur text-royal-900 px-4 py-2 rounded-full shadow-md border border-gray-200 hover:bg-royal-50 transition-colors text-sm font-medium ring-1 ring-black/5">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i> Nominate Yourself
+                 </button>
+            </div>
+
+            <!-- King Candidates -->
+            <div id="king-section">
+                <div class="flex items-center justify-center gap-3 mb-6 md:mb-8">
+                    <i data-lucide="crown" class="text-gold-500 w-6 h-6 md:w-8 md:h-8 fill-current"></i>
+                    <h2 class="text-2xl md:text-3xl font-serif text-royal-900">King Candidates</h2>
+                    <i data-lucide="crown" class="text-gold-500 w-6 h-6 md:w-8 md:h-8 fill-current"></i>
+                </div>
+                <div id="king-voted-msg" class="hidden text-center mb-6 text-green-600 font-medium bg-green-50 p-3 rounded-lg mx-auto max-w-md flex justify-center gap-2 items-center text-sm md:text-base">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i> You have already voted for King
+                </div>
+                <div id="king-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 justify-items-center px-2"></div>
+            </div>
+
+            <!-- Queen Candidates -->
+            <div id="queen-section" class="mt-12">
+                <div class="flex items-center justify-center gap-3 mb-6 md:mb-8">
+                    <i data-lucide="crown" class="text-pink-500 w-6 h-6 md:w-8 md:h-8 fill-current"></i>
+                    <h2 class="text-2xl md:text-3xl font-serif text-royal-900">Queen Candidates</h2>
+                    <i data-lucide="crown" class="text-pink-500 w-6 h-6 md:w-8 md:h-8 fill-current"></i>
+                </div>
+                <div id="queen-voted-msg" class="hidden text-center mb-6 text-green-600 font-medium bg-green-50 p-3 rounded-lg mx-auto max-w-md flex justify-center gap-2 items-center text-sm md:text-base">
+                     <i data-lucide="check-circle" class="w-5 h-5"></i> You have already voted for Queen
+                </div>
+                <div id="queen-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 justify-items-center px-2"></div>
+            </div>
+
+            <!-- Live Results (User) -->
+            <div id="user-results-container" class="hidden bg-white p-4 md:p-8 rounded-xl shadow-lg border border-gray-100 mt-12 mx-2 md:mx-0">
+                <h2 class="text-2xl font-serif text-center mb-8 text-royal-900">Live Results</h2>
+                <div id="user-results-chart" class="flex flex-col gap-4"></div>
+            </div>
+        </section>
+
+        <!-- SECTION: Admin Login -->
+        <section id="admin-login-page" class="hidden min-h-screen bg-royal-900 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative animate-fadeIn">
+                <div class="bg-royal-800 p-8 text-center">
+                    <div class="w-16 h-16 bg-gold-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-gold-400">
+                        <i data-lucide="shield-alert" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="text-2xl font-serif font-bold text-white">Admin Access</h2>
+                    <p class="text-royal-100 text-sm mt-2">Verification Required</p>
+                    <button onclick="app.navigate('landing')" class="absolute top-4 left-4 text-white/50 hover:text-white"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
+                </div>
+                <div class="p-8">
+                    <form id="login-email-form" onsubmit="app.handleAdminEmail(event)" class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Admin Email</label>
+                            <input type="email" id="admin-email-input" class="w-full border p-3 rounded-lg" placeholder="email@example.com" required>
+                        </div>
+                        <button type="submit" class="w-full bg-royal-900 text-white py-3 rounded-lg font-bold hover:bg-royal-800 active:bg-royal-950 transition-colors">Send Code</button>
+                    </form>
+                    <form id="login-code-form" onsubmit="app.handleAdminCode(event)" class="hidden space-y-6">
+                        <div class="bg-blue-50 text-blue-800 text-xs p-3 rounded border border-blue-100">
+                            <strong>Demo Mode:</strong> Code sent to console (F12).
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">Verification Code</label>
+                            <input type="text" id="admin-code-input" class="w-full border p-3 rounded-lg text-center tracking-widest text-xl font-mono" placeholder="000000" maxlength="6" inputmode="numeric" required>
+                        </div>
+                        <button type="submit" class="w-full bg-gold-500 text-royal-900 py-3 rounded-lg font-bold hover:bg-gold-400 active:bg-gold-600 transition-colors">Verify & Login</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: Admin Dashboard -->
+        <section id="admin-panel" class="hidden min-h-screen bg-gray-100 flex flex-col md:flex-row">
+            <!-- Sidebar (Desktop) -->
+            <div class="w-64 bg-royal-900 text-white flex-shrink-0 hidden md:flex flex-col h-screen sticky top-0">
+                <div class="p-6 border-b border-royal-800 flex items-center gap-3">
+                    <i data-lucide="layout-dashboard" class="text-gold-400"></i>
+                    <h1 class="text-xl font-serif font-bold">Admin Panel</h1>
+                </div>
+                <nav class="mt-6 flex-1 space-y-1" id="admin-sidebar-links">
+                    <!-- Links injected by JS -->
+                </nav>
+            </div>
+
+            <!-- Mobile Tab Bar (Bottom) -->
+            <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 flex justify-between px-2 py-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] safe-area-bottom" id="admin-mobile-nav">
+                 <!-- Links injected by JS -->
+            </div>
+
+            <!-- Admin Content Area -->
+            <div class="flex-1 p-4 md:p-8 overflow-y-auto w-full pb-24 md:pb-8">
+                <header class="mb-6 md:mb-8 flex justify-between items-center">
+                    <h2 id="admin-page-title" class="text-xl md:text-2xl font-bold text-gray-800">Dashboard</h2>
+                </header>
+                
+                <!-- Tab: Dashboard -->
+                <div id="tab-dashboard" class="space-y-4 md:space-y-6 admin-tab">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="stats-grid">
+                        <!-- Stats injected by JS -->
+                    </div>
+                    <!-- Timer Status -->
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
+                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+                             <div class="flex items-center gap-2">
+                                <i data-lucide="clock" class="text-royal-800 w-5 h-5"></i>
+                                <h3 class="font-semibold text-gray-800">Election Timer</h3>
+                             </div>
+                             <span id="admin-timer-badge" class="text-xs sm:text-sm font-mono font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full self-start sm:self-auto"></span>
+                         </div>
+                         <div class="w-full bg-gray-100 rounded-full h-4 md:h-6 overflow-hidden shadow-inner">
+                            <div id="admin-timer-bar" class="h-full bg-royal-900 transition-all duration-1000 relative w-0"></div>
+                         </div>
+                    </div>
+                    <!-- Live Results Chart -->
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">Live Election Results</h3>
+                        <div id="admin-results-chart" class="flex flex-col gap-4"></div>
+                    </div>
+                </div>
+
+                <!-- Tab: Candidates -->
+                <div id="tab-candidates" class="hidden space-y-4 md:space-y-6 admin-tab">
+                     <!-- Nomination Requests -->
+                     <div id="nominations-container" class="hidden bg-white border border-gray-200 rounded-lg p-4 md:p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
+                            Nomination Requests
+                            <span id="admin-nom-count" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full hidden">0</span>
+                        </h3>
+                        <div id="nominations-list" class="grid gap-3 max-h-80 overflow-y-auto custom-scrollbar"></div>
+                     </div>
+
+                     <!-- Add Candidate Form -->
+                     <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h3 class="text-lg font-semibold mb-4">Manage Candidate</h3>
+                        <form id="candidate-form" onsubmit="app.handleCandidateSubmit(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="hidden" id="cand-id">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Name</label>
+                                <input type="text" id="cand-name" required class="w-full border p-2 rounded mt-1 bg-gray-50 focus:bg-white transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Type</label>
+                                <select id="cand-type" class="w-full border p-2 rounded mt-1 bg-gray-50 focus:bg-white transition-colors">
+                                    <option value="KING">King</option>
+                                    <option value="QUEEN">Queen</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700">Image</label>
+                                <div class="flex flex-col sm:flex-row gap-2 mt-1">
+                                    <input type="text" id="cand-image" placeholder="Image URL" class="flex-1 border p-2 rounded bg-gray-50 focus:bg-white transition-colors">
+                                    <label class="bg-gray-100 border px-3 py-2 rounded cursor-pointer hover:bg-gray-200 text-center flex items-center justify-center gap-2">
+                                        <i data-lucide="upload" class="w-4 h-4"></i>
+                                        <span class="text-sm">Upload</span>
+                                        <input type="file" accept="image/*" class="hidden" onchange="app.handleImageUpload(this, 'cand-image')">
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="block text-sm font-medium text-gray-700">Bio</label>
+                                    <button type="button" onclick="app.generateBio()" class="text-xs text-royal-800 font-bold flex items-center gap-1 bg-royal-50 px-2 py-1 rounded hover:bg-royal-100">
+                                        <i data-lucide="wand-2" class="w-3 h-3"></i> AI Generate
+                                    </button>
+                                </div>
+                                <textarea id="cand-bio" rows="3" required class="w-full border p-2 rounded mt-1 bg-gray-50 focus:bg-white transition-colors"></textarea>
+                            </div>
+                            <div class="md:col-span-2 flex justify-end gap-2 pt-2">
+                                <button type="button" onclick="app.resetCandidateForm()" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50 text-sm">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-royal-900 text-white rounded hover:bg-royal-800 font-medium text-sm">Save Candidate</button>
+                            </div>
+                        </form>
+                     </div>
+
+                     <!-- List -->
+                     <div id="candidates-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- Tab: Settings -->
+                <div id="tab-settings" class="hidden space-y-4 md:space-y-6 admin-tab">
+                    <div class="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-lg font-semibold mb-4 border-b pb-2">Timer</h3>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm text-gray-700">Duration (Minutes)</label>
+                                <input type="number" id="setting-timer-duration" class="border p-2 rounded w-full mt-1 bg-gray-50" onchange="app.updateTimerSettings(this.value)">
+                                <div id="setting-timer-display" class="text-3xl md:text-4xl font-mono font-bold mt-2 text-gray-800">00:00</div>
+                            </div>
+                            <div class="space-y-2">
+                                <button onclick="app.toggleTimer()" id="btn-toggle-timer" class="w-full py-3 rounded font-bold text-white bg-yellow-500 active:scale-[0.98] transition-transform">Pause Timer</button>
+                                <button onclick="app.resetTimer()" class="w-full py-2 border rounded hover:bg-gray-50 active:bg-gray-100">Reset Timer</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-lg font-semibold mb-4 border-b pb-2">Visibility & Control</h3>
+                        <div class="space-y-4">
+                            <label class="flex justify-between items-center p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition-colors">
+                                <div>
+                                    <span class="text-sm font-medium block">Show Winners (After End)</span>
+                                    <span class="text-xs text-gray-500">Reveal podium when voting is closed.</span>
+                                </div>
+                                <input type="checkbox" id="setting-show-winners" class="w-5 h-5 accent-royal-900" onchange="app.updateSetting('showWinnersToUser', this.checked)">
+                            </label>
+
+                            <label class="flex justify-between items-center p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition-colors">
+                                <span class="text-sm font-medium">Show Live Results to Users</span>
+                                <input type="checkbox" id="setting-show-results" class="w-5 h-5 accent-royal-900" onchange="app.updateSetting('showResultsToUser', this.checked)">
+                            </label>
+                             <label class="flex justify-between items-center p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition-colors">
+                                <span class="text-sm font-medium">Show Timer to Users</span>
+                                <input type="checkbox" id="setting-show-timer" class="w-5 h-5 accent-royal-900" onchange="app.updateSetting('showTimerToUser', this.checked)">
+                            </label>
+                             <label class="flex justify-between items-center p-3 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition-colors">
+                                <span class="text-sm font-medium"><b>Voting Active</b></span>
+                                <input type="checkbox" id="setting-voting-active" class="w-5 h-5 accent-royal-900" onchange="app.updateSetting('isVotingActive', this.checked)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-50 p-4 md:p-6 rounded-lg border border-indigo-200">
+                        <h3 class="text-lg font-semibold text-indigo-900 mb-2">Simulations</h3>
+                        <p class="text-sm text-indigo-700 mb-4">Simulate concurrent user activity.</p>
+                        <button onclick="app.simulateBots(300)" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded font-bold hover:bg-indigo-700 active:scale-95 transition-transform text-sm">
+                            Simulate 300 Concurrent Bot Users
+                        </button>
+                    </div>
+
+                    <div class="bg-red-50 p-4 md:p-6 rounded-lg border border-red-200">
+                         <h3 class="text-lg font-semibold text-red-900 mb-2">Danger Zone</h3>
+                         <button onclick="app.resetElection()" class="w-full sm:w-auto px-6 py-3 bg-red-600 text-white rounded font-bold hover:bg-red-700 active:scale-95 transition-transform text-sm">Reset Entire Election</button>
+                    </div>
+                </div>
+
+                <!-- Tab: History -->
+                <div id="tab-history" class="hidden space-y-4 md:space-y-6 admin-tab">
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div class="p-4 border-b bg-gray-50 font-bold text-sm md:text-base">Recent Vote Log (Last 100)</div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm text-left whitespace-nowrap">
+                                <thead class="bg-gray-100 text-gray-600 uppercase">
+                                    <tr>
+                                        <th class="px-4 md:px-6 py-3">Time</th>
+                                        <th class="px-4 md:px-6 py-3">Candidate</th>
+                                        <th class="px-4 md:px-6 py-3">Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body" class="divide-y"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODALS -->
+
+    <!-- Bio Modal -->
+    <div id="bio-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="relative h-64 md:h-80 shrink-0">
+                <img id="bio-img" src="" class="w-full h-full object-cover">
+                <button onclick="app.toggleModal('bio-modal', false)" class="absolute top-4 right-4 bg-white/80 p-2 rounded-full hover:bg-white text-black active:scale-90 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 pt-20">
+                    <h2 id="bio-name" class="text-2xl md:text-3xl font-serif text-white font-bold truncate"></h2>
+                    <span id="bio-type" class="text-xs px-2 py-1 rounded bg-blue-500 text-white font-bold mt-2 inline-block"></span>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p id="bio-text" class="text-gray-600 text-lg font-serif italic"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nomination Modal -->
+    <div id="nomination-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 bg-royal-900 text-white flex justify-between items-center shrink-0">
+                <h3 class="font-bold text-lg">Nominate Yourself</h3>
+                <button onclick="app.toggleModal('nomination-modal', false)" class="active:scale-90 transition-transform"><i data-lucide="x"></i></button>
+            </div>
+            <form onsubmit="app.handleNominationSubmit(event)" class="p-6 space-y-4 overflow-y-auto">
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" id="nom-name" placeholder="Your Name" required class="w-full border p-2.5 rounded-lg bg-gray-50 focus:bg-white">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Category</label>
+                    <select id="nom-type" class="w-full border p-2.5 rounded-lg bg-gray-50 focus:bg-white">
+                        <option value="KING">King</option>
+                        <option value="QUEEN">Queen</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                     <label class="text-sm font-medium text-gray-700">Photo</label>
+                     <div class="flex gap-2">
+                         <input type="text" id="nom-image" placeholder="Photo URL" class="flex-1 border p-2.5 rounded-lg bg-gray-50 focus:bg-white">
+                         <label class="bg-gray-100 border px-3 py-2 rounded-lg cursor-pointer flex items-center justify-center active:bg-gray-200">
+                            <i data-lucide="upload" class="w-5 h-5"></i>
+                            <input type="file" accept="image/*" class="hidden" onchange="app.handleImageUpload(this, 'nom-image')">
+                        </label>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Short Bio</label>
+                    <textarea id="nom-bio" placeholder="Tell us about yourself..." required rows="3" class="w-full border p-2.5 rounded-lg bg-gray-50 focus:bg-white"></textarea>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-gray-700">Access Code</label>
+                    <input type="password" id="nom-password" placeholder="Enter 4-digit code" required class="w-full border p-2.5 rounded-lg bg-gray-50 focus:bg-white tracking-widest">
+                </div>
+                <button type="submit" class="w-full bg-royal-900 text-white py-3 rounded-xl font-bold active:scale-[0.98] transition-transform">Submit Nomination</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Nomination Review Modal -->
+    <div id="review-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="relative h-64 bg-gray-200 shrink-0">
+                <img id="review-img" src="" class="w-full h-full object-cover">
+                <button onclick="app.toggleModal('review-modal', false)" class="absolute top-4 right-4 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 active:scale-90"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6 pt-12">
+                    <h2 id="review-name" class="text-2xl md:text-3xl font-serif text-white font-bold truncate"></h2>
+                    <span id="review-type" class="text-xs px-2 py-1 rounded bg-gold-500 text-royal-900 font-bold mt-2 inline-block"></span>
+                </div>
+            </div>
+            <div class="p-6 space-y-6 overflow-y-auto">
+                <div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Candidate Bio</h4>
+                    <p id="review-bio" class="text-gray-700 text-lg font-serif italic bg-gray-50 p-4 rounded-lg border border-gray-100"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 pt-2">
+                    <button onclick="app.openRejectionModal()" class="w-full py-3 rounded-xl border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                        <i data-lucide="x-circle" class="w-5 h-5"></i> Reject
+                    </button>
+                    <button onclick="app.approveCurrentNomination()" class="w-full py-3 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i> Approve
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rejection Reason Modal -->
+    <div id="rejection-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-red-600 mb-2 flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-6 h-6"></i> Reject Nomination
+            </h3>
+            <p class="text-gray-600 mb-4 text-sm">Please provide a reason for rejecting this candidate. This may be visible to audit logs.</p>
+            <textarea id="rejection-reason" rows="3" class="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" placeholder="Reason (e.g., Inappropriate content, Duplicate entry...)"></textarea>
+            <div class="flex justify-end gap-3">
+                <button onclick="app.toggleModal('rejection-modal', false)" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg active:scale-95">Cancel</button>
+                <button onclick="app.confirmRejection()" class="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 active:scale-95">Confirm Rejection</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vote Confirmation Modal -->
+    <div id="vote-confirmation-modal" class="fixed inset-0 z-[80] hidden flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col animate-fadeIn">
+            <div class="p-6 text-center space-y-4">
+                <div class="mx-auto w-20 h-20 rounded-full border-4 border-gold-400 overflow-hidden shadow-lg">
+                    <img id="confirm-vote-img" src="" class="w-full h-full object-cover">
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Confirm Your Vote</h3>
+                <p class="text-gray-600">
+                    Are you sure you want to vote for <br>
+                    <span id="confirm-vote-name" class="font-serif font-bold text-royal-900 text-lg"></span>
+                    <br> as <span id="confirm-vote-type" class="font-bold text-gold-500"></span>?
+                </p>
+                <p class="text-xs text-gray-400">This action cannot be undone.</p>
+            </div>
+            <div class="grid grid-cols-2 border-t border-gray-100">
+                <button onclick="app.toggleModal('vote-confirmation-modal', false)" class="p-4 text-gray-600 font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="app.confirmVote()" class="p-4 text-white font-bold bg-royal-900 hover:bg-royal-800 active:bg-royal-950 transition-colors">
+                    Confirm Vote
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+</body>
+</html>
